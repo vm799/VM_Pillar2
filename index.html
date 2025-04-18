@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Schroders Pillar Two Tax Dashboard for global tax compliance">
+    <title>Schroders Pillar Two Dashboard</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard-enhancements-styles.css">
+    <link rel="stylesheet" href="css/utils.css">
+    
+    <!-- Load Chart.js UMD bundle -->
+    <script src="https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="dashboard-header">
+            <div class="logo">
+                <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%2050%22%3E%3Crect%20width%3D%22200%22%20height%3D%2250%22%20fill%3D%22%23003865%22%2F%3E%3Cpath%20d%3D%22M20%2010h160v30H20z%22%20fill%3D%22%23003865%22%2F%3E%3Cpath%20d%3D%22M30%2015h140v20H30z%22%20fill%3D%22%23003865%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%2230%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20fill%3D%22white%22%3ESchroders%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Schroders Logo" class="logo-image">
+                <h1>Pillar II Tax Dashboard</h1>
+            </div>
+            <div class="user-actions">
+                <button class="btn btn-outline" aria-label="Export Data">Export Data</button>
+                <button class="btn" aria-label="Settings">Settings</button>
+            </div>
+        </header>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="year-filter" class="filter-label">Year:</label>
+                <select id="year-filter" aria-label="Select year filter">
+                    <option value="2023">2023</option>
+                    <option value="2024" selected>2024</option>
+                    <option value="2025">2025</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="region-filter" class="filter-label">Region:</label>
+                <select id="region-filter" aria-label="Select region filter">
+                    <option value="all">All Regions</option>
+                    <option value="emea">EMEA</option>
+                    <option value="apac">APAC</option>
+                    <option value="americas">Americas</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="etr-filter" class="filter-label">ETR Threshold:</label>
+                <select id="etr-filter" aria-label="Select ETR threshold filter">
+                    <option value="all">All</option>
+                    <option value="below">Below 15%</option>
+                    <option value="above">Above 15%</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button id="apply-filters" class="btn btn-outline" aria-label="Apply filters">Apply Filters</button>
+            </div>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-label">Total Entities</div>
+                <div class="metric-value" aria-live="polite">--</div>
+                <div class="metric-trend"><span>No change</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Average ETR</div>
+                <div class="metric-value" aria-live="polite">--</div>
+                <div class="metric-trend"><span>Not available</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Entities Below 15% ETR</div>
+                <div class="metric-value" aria-live="polite">--</div>
+                <div class="metric-trend"><span>Not available</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Top-Up Tax</div>
+                <div class="metric-value" aria-live="polite">--</div>
+                <div class="metric-trend"><span>Not available</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Safe Harbor Eligible</div>
+                <div class="metric-value" aria-live="polite">--</div>
+                <div class="metric-trend"><span>Not available</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Anomalies Detected</div>
+                <div class="metric-value" aria-live="polite">--</div>
+                <div class="metric-trend"><span>Not available</span></div>
+            </div>
+        </div>
+
+        <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="entity" role="tab" aria-selected="true" aria-controls="entity-content">Entity Summary</button>
+            <button class="tab" data-tab="etr" role="tab" aria-selected="false" aria-controls="etr-content">Jurisdictional ETR</button>
+            <button class="tab" data-tab="topup" role="tab" aria-selected="false" aria-controls="topup-content">Top-Up Tax Analysis</button>
+            <button class="tab" data-tab="calculation" role="tab" aria-selected="false" aria-controls="calculation-content">Calculation Validation</button>
+            <button class="tab" data-tab="anomaly" role="tab" aria-selected="false" aria-controls="anomaly-content">Anomaly Detection</button>
+            <button class="tab" data-tab="gir" role="tab" aria-selected="false" aria-controls="gir-content">Global Info Reporting</button>
+            <button class="tab" data-tab="analytics" role="tab" aria-selected="false" aria-controls="analytics-content">Advanced Analytics</button>
+            <button class="tab" data-tab="reports" role="tab" aria-selected="false" aria-controls="reports-content">Reports</button>
+        </div>
+
+        <div class="main-content" id="entity-content" role="tabpanel" aria-labelledby="entity-tab">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Top 20 Entities</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline" aria-label="Export entities">Export</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="entities-table">
+                        <caption>List of top 20 entities by GloBE Income</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Entity Name</th>
+                                <th scope="col">Jurisdiction</th>
+                                <th scope="col">ETR</th>
+                                <th scope="col">GloBE Income</th>
+                                <th scope="col">Top-Up Tax</th>
+                                <th scope="col">Safe Harbor</th>
+                                <th scope="col">Anomaly</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">ETR by Jurisdiction</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline" aria-label="View full ETR map">View Full Map</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="etr-chart" height="300" aria-label="Bar chart showing ETR by jurisdiction"></canvas>
+                </div>
+                <div class="panel-header chart-section-header">
+                    <h2 class="panel-title">Top-Up Tax Distribution</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="topup-chart" height="300" aria-label="Chart showing top-up tax distribution"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="etr-content" role="tabpanel" aria-labelledby="etr-tab" hidden>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Jurisdictional ETR Map</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="etr-map" height="400" aria-label="World map showing ETR by jurisdiction"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="topup-content" role="tabpanel" aria-labelledby="topup-tab" hidden>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Top-Up Tax Analysis</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="topup-analysis" height="400" aria-label="Chart showing top-up tax analysis"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculation Validation Tab Content -->
+        <div class="main-content" id="calculation-content" role="tabpanel" aria-labelledby="calculation-tab" hidden>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Calculation Validator</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline" aria-label="Export validation report">Export Validation Report</button>
+                    </div>
+                </div>
+                
+                <div class="validation-container">
+                    <p class="validation-description">This validation tool allows tax specialists to review and verify all Pillar Two calculations according to OECD regulatory requirements. Select a calculation category below to review formula details, applicable regulations, and validate the implementation.</p>
+                    
+                    <div class="validation-buttons">
+                        <button class="btn validation-category-btn" data-category="etr" aria-label="Validate ETR calculations">ETR Calculations</button>
+                        <button class="btn validation-category-btn" data-category="sbie" aria-label="Validate SBIE calculations">SBIE Calculations</button>
+                        <button class="btn validation-category-btn" data-category="safeharbor" aria-label="Validate safe harbor rules">Safe Harbor Rules</button>
+                        <button class="btn validation-category-btn" data-category="topup" aria-label="Validate top-up tax formulas">Top-Up Tax Formulas</button>
+                        <button class="btn validation-category-btn" data-category="adjustments" aria-label="Validate GloBE adjustments">GloBE Adjustments</button>
+                    </div>
+                    
+                    <div id="validationCategoryContent" class="validation-category-content" aria-live="polite">
+                        <!-- Default content will be loaded by JS -->
+                        <div class="validation-intro">
+                            <h3>Pillar Two Calculation Validation</h3>
+                            <p>Select a calculation type from above to validate implementation and compliance with OECD Pillar Two regulations.</p>
+                            <p>This tool allows tax specialists to verify calculation accuracy and ensure proper implementation of the Global Anti-Base Erosion (GloBE) rules.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="anomaly-content" role="tabpanel" aria-labelledby="anomaly-tab" hidden>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Anomaly Detection</h2>
+                    <div class="panel-actions">
+                        <button class="btn" aria-label="Run anomaly analysis">Run Analysis</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="anomaly-chart" height="400" aria-label="Chart showing anomaly detection results"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="gir-content" role="tabpanel" aria-labelledby="gir-tab" hidden>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Global Information Reporting (GIR)</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-outline" id="export-gir" aria-label="Export GIR report">Export GIR Report</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="gir-table">
+                        <caption>Global Information Reporting data by jurisdiction</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Jurisdiction</th>
+                                <th scope="col">Total Income</th>
+                                <th scope="col">Taxes Paid</th>
+                                <th scope="col">Economic Activity</th>
+                                <th scope="col">Safe Harbor Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="analytics-content" role="tabpanel" aria-labelledby="analytics-tab" hidden>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Advanced Analytics</h2>
+                </div>
+                <!-- KPI Card for Average ETR -->
+                <div class="metric-card analytics-kpi" id="avg-etr-kpi">
+                    <div class="metric-label">Average ETR</div>
+                    <div class="metric-value" id="avg-etr-value" aria-live="polite">--</div>
+                </div>
+                <!-- Heatmap for ETR Distribution -->
+                <div class="chart-container">
+                    <h3>ETR Heatmap by Jurisdiction</h3>
+                    <canvas id="etr-heatmap" height="300" aria-label="Heatmap showing ETR distribution by jurisdiction"></canvas>
+                </div>
+                <!-- Line Chart for ETR Trends with Region Slicer -->
+                <div class="chart-container">
+                    <h3>ETR Trends Over Time</h3>
+                    <div class="filter-group filter-slicer">
+                        <label for="analytics-region-slicer" class="filter-label">Region Slicer:</label>
+                        <select id="analytics-region-slicer" aria-label="Select region for trend analysis">
+                            <option value="all">All Regions</option>
+                            <option value="emea">EMEA</option>
+                            <option value="apac">APAC</option>
+                            <option value="americas">Americas</option>
+                        </select>
+                    </div>
+                    <canvas id="etr-trend-chart" height="300" aria-label="Line chart showing ETR trends over time"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="reports-content" role="tabpanel" aria-labelledby="reports-tab" hidden>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Custom Reports</h2>
+                </div>
+                <div class="report-options">
+                    <label for="report-format">Report Format:</label>
+                    <select id="report-format" aria-label="Select report format">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                    <button class="btn btn-outline" id="generate-report" aria-label="Generate report">Generate Report</button>
+                </div>
+                <p class="report-description">Generate detailed Pillar Two compliance reports here. Supports periods starting on or after December 31, 2024, with prior disclosures for safe harbor analysis (as of December 31, 2023).</p>
+            </div>
+        </div>
+
+        <!-- Entity Detail Modal -->
+        <div id="entityDetailModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="entity-detail-title" hidden>
+            <div class="modal-content">
+                <button class="close-modal" aria-label="Close modal">&times;</button>
+                <h2 id="entity-detail-title" class="visually-hidden">Entity Details</h2>
+                <div id="entity-detail-content"></div>
+            </div>
+        </div>
+
+        <!-- Calculation Detail Modal -->
+        <div id="calculationDetailModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="calculation-detail-title" hidden>
+            <div class="modal-content">
+                <button class="close-modal" id="closeCalculationDetail" aria-label="Close modal">&times;</button>
+                <h2 id="calculation-detail-title">Calculation Details</h2>
+                
+                <!-- ETR Calculation Detail -->
+                <div id="etr_calculation" class="calculation-detail" hidden>
+                    <h2 class="detail-title">Jurisdictional ETR Calculation</h2>
+                    
+                    <div class="detail-section">
+                        <h3>Formula</h3>
+                        <div class="formula-code">
+                            Jurisdictional ETR = Adjusted Covered Taxes / Net GloBE Income
+                        </div>
+                        
+                        <div class="calculation-values">
+                            <div class="value-row">
+                                <div class="value-label">Adjusted Covered Taxes:</div>
+                                <div class="value-amount">$12.6M</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">Net GloBE Income:</div>
+                                <div class="value-amount">$98.3M</div>
+                            </div>
+                            <div class="value-row result-row">
+                                <div class="value-label">Jurisdictional ETR:</div>
+                                <div class="value-amount value-warning">12.8%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Regulatory Reference</h3>
+                        <div class="regulatory-text">
+                            <p><strong>Article 4.1 of the OECD Model Rules:</strong> "The GloBE income or loss of a constituent entity for a fiscal year is the financial accounting net income or loss determined for the constituent entity taking into account all adjustments under this Article and Article 3.2."</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-actions">
+                        <button class="btn btn-outline" aria-label="Export this calculation">Export Calculation</button>
+                        <div class="action-group">
+                            <button class="btn btn-outline" aria-label="Add comment to this calculation">Add Comment</button>
+                            <button class="btn" aria-label="Validate this calculation">Validate Calculation</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top-Up Tax Calculation Detail -->
+                <div id="topup_tax" class="calculation-detail" hidden>
+                    <h2 class="detail-title">Top-Up Tax Calculation</h2>
+                    
+                    <div class="detail-section">
+                        <h3>Formula</h3>
+                        <div class="formula-code">
+                            Top-Up Tax = Top-Up Tax Percentage × (GloBE Income - Substance-Based Income Exclusion)
+                        </div>
+                        
+                        <div class="calculation-values">
+                            <div class="value-row">
+                                <div class="value-label">Top-Up Tax Percentage:</div>
+                                <div class="value-amount">2.2%</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">GloBE Income:</div>
+                                <div class="value-amount">$98.3M</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">Substance-Based Income Exclusion:</div>
+                                <div class="value-amount">$14.7M</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">Excess Profit:</div>
+                                <div class="value-amount">$83.6M</div>
+                            </div>
+                            <div class="value-row result-row">
+                                <div class="value-label">Top-Up Tax:</div>
+                                <div class="value-amount">$2.2M</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Regulatory Reference</h3>
+                        <div class="regulatory-text">
+                            <p><strong>Article 5.2 of the OECD Model Rules:</strong> "The top-up tax percentage for a jurisdiction for a fiscal year is the positive percentage point difference between the minimum rate and the jurisdiction's effective tax rate."</p>
+                            <p><strong>Article 5.2.3:</strong> "The jurisdictional top-up tax for a fiscal year is the sum of the top-up tax of all the constituent entities located in the jurisdiction for the fiscal year."</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-actions">
+                        <button class="btn btn-outline" aria-label="Export this calculation">Export Calculation</button>
+                        <div class="action-group">
+                            <button class="btn btn-outline" aria-label="Add comment to this calculation">Add Comment</button>
+                            <button class="btn" aria-label="Validate this calculation">Validate Calculation</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Safe Harbor Calculation Detail -->
+                <div id="safe_harbor" class="calculation-detail" hidden>
+                    <h2 class="detail-title">Safe Harbor Determination</h2>
+                    
+                    <div class="detail-section">
+                        <h3>Tests</h3>
+                        
+                        <div class="test-section">
+                            <h4>De Minimis Test</h4>
+                            <div class="formula-code">
+                                Qualification: Revenue < €10M AND Profit < €1M
+                            </div>
+                            
+                            <div class="calculation-values">
+                                <div class="value-row">
+                                    <div class="value-label">Revenue:</div>
+                                    <div class="value-amount">€110.4M</div>
+                                </div>
+                                <div class="value-row">
+                                    <div class="value-label">Profit:</div>
+                                    <div class="value-amount">€98.3M</div>
+                                </div>
+                                <div class="value-row result-row">
+                                    <div class="value-label">Result:</div>
+                                    <div class="value-amount value-warning">Not Qualified - Exceeds thresholds</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h4>ETR Test</h4>
+                            <div class="formula-code">
+                                Qualification: Simplified ETR ≥ 15%
+                            </div>
+                            
+                            <div class="calculation-values">
+                                <div class="value-row">
+                                    <div class="value-label">Simplified ETR:</div>
+                                    <div class="value-amount">12.8%</div>
+                                </div>
+                                <div class="value-row result-row">
+                                    <div class="value-label">Result:</div>
+                                    <div class="value-amount value-warning">Not Qualified - Below minimum ETR</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h4>Routine Profits Test</h4>
+                            <div class="formula-code">
+                                Qualification: Return on Eligible Assets and Payroll below specified margins
+                            </div>
+                            
+                            <div class="calculation-values">
+                                <div class="value-row">
+                                    <div class="value-label">Return on Eligible Assets:</div>
+                                    <div class="value-amount">19.2%</div>
+                                </div>
+                                <div class="value-row">
+                                    <div class="value-label">Return on Eligible Payroll:</div>
+                                    <div class="value-amount">18.5%</div>
+                                </div>
+                                <div class="value-row result-row">
+                                    <div class="value-label">Result:</div>
+                                    <div class="value-amount value-warning">Not Qualified - Returns exceed thresholds</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Regulatory Reference</h3>
+                        <div class="regulatory-text">
+                            <p><strong>OECD Pillar Two Safe Harbor Provisions:</strong> "The Safe Harbor provisions provide a simplified method to determine whether top-up tax is due in a jurisdiction, reducing compliance burden for MNE groups when certain conditions are met."</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-actions">
+                        <button class="btn btn-outline" aria-label="Export this calculation">Export Calculation</button>
+                        <div class="action-group">
+                            <button class="btn btn-outline" aria-label="Add comment to this calculation">Add Comment</button>
+                            <button class="btn" aria-label="Validate this calculation">Validate Calculation</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SBIE Calculation Detail -->
+                <div id="sbie_calculation" class="calculation-detail" hidden>
+                    <h2 class="detail-title">Substance-Based Income Exclusion (SBIE) Calculation</h2>
+                    
+                    <div class="detail-section">
+                        <h3>Formula</h3>
+                        <div class="formula-code">
+                            SBIE = (Payroll Costs × 5%) + (Carrying Value of Tangible Assets × 5%)
+                        </div>
+                        
+                        <div class="calculation-values">
+                            <div class="value-row">
+                                <div class="value-label">Payroll Costs:</div>
+                                <div class="value-amount">$152.4M</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">Payroll Component (5%):</div>
+                                <div class="value-amount">$7.62M</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">Carrying Value of Tangible Assets:</div>
+                                <div class="value-amount">$141.6M</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">Tangible Assets Component (5%):</div>
+                                <div class="value-amount">$7.08M</div>
+                            </div>
+                            <div class="value-row result-row">
+                                <div class="value-label">Total SBIE:</div>
+                                <div class="value-amount">$14.7M</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Regulatory Reference</h3>
+                        <div class="regulatory-text">
+                            <p><strong>Article 5.3 of the OECD Model Rules:</strong> "The substance-based income exclusion for a jurisdiction is the sum of the payroll component and the tangible asset component for each constituent entity located in the jurisdiction."</p>
+                            <p><strong>Article 5.3.1:</strong> "The payroll component is 5% of the eligible payroll costs of eligible employees."</p>
+                            <p><strong>Article 5.3.2:</strong> "The tangible asset component is 5% of the carrying value of eligible tangible assets."</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-actions">
+                        <button class="btn btn-outline" aria-label="Export this calculation">Export Calculation</button>
+                        <div class="action-group">
+                            <button class="btn btn-outline" aria-label="Add comment to this calculation">Add Comment</button>
+                            <button class="btn" aria-label="Validate this calculation">Validate Calculation</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- GloBE Income Calculation Detail -->
+                <div id="globe_income" class="calculation-detail" hidden>
+                    <h2 class="detail-title">GloBE Income Calculation</h2>
+                    
+                    <div class="detail-section">
+                        <h3>Formula</h3>
+                        <div class="formula-code">
+                            GloBE Income = Financial Accounting Net Income - Accounting Adjustments
+                        </div>
+                        
+                        <div class="calculation-values">
+                            <div class="value-row">
+                                <div class="value-label">Financial Accounting Net Income:</div>
+                                <div class="value-amount">$108.6M</div>
+                            </div>
+                            <div class="value-row">
+                                <div class="value-label">Accounting Adjustments:</div>
+                                <div class="value-amount">-$10.3M</div>
+                            </div>
+                            <div class="value-row result-row">
+                                <div class="value-label">GloBE Income:</div>
+                                <div class="value-amount">$98.3M</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Regulatory Reference</h3>
+                        <div class="regulatory-text">
+                            <p><strong>Article 5.1 of the OECD Model Rules:</strong> "The effective tax rate of a jurisdiction is the total adjusted covered taxes of the constituent entities located in the jurisdiction divided by the net GloBE income of the jurisdiction for the fiscal year."</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-actions">
+                        <button class="btn btn-outline" aria-label="Export this calculation">Export Calculation</button>
+                        <div class="action-group">
+                            <button class="btn btn-outline" aria-label="Add comment to this calculation">Add Comment</button>
+                            <button class="btn" aria-label="Validate this calculation">Validate Calculation</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay" hidden>
+        <div class="loading-spinner"></div>
+        <div class="loading-message">Loading...</div>
+        <span class="visually-hidden">Loading data, please wait</span>
+    </div>
+
+    <!-- Load application JavaScript files in the correct order -->
+    <script src="js/components/placeholder-handler.js"></script>
+    <script src="js/components/tab-manager.js"></script>
+    <script src="js/components/chart-renderer.js"></script>
+    <script src="js/components/validation-handler.js"></script>
+    <script src="js/tax-anomaly-detector.js"></script>
+    <script src="js/data/schroders-hfm-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
